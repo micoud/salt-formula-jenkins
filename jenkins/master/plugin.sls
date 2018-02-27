@@ -1,9 +1,18 @@
 {% from "jenkins/map.jinja" import master with context %}
 
+# RedHat-specific
+# TODO make this generic
+# make sure group nogroup is present
+nogroup_present:
+  group.present:
+    - name: nogroup
+
 {{ master.home }}/updates:
   file.directory:
   - user: jenkins
   - group: nogroup
+  - require:
+    - nogroup_present
 
 setup_jenkins_cli:
   cmd.run:

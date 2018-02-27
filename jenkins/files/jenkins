@@ -16,7 +16,7 @@ PIDFILE=/var/run/jenkins/jenkins.pid
 JENKINS_USER=jenkins
 
 # location of the jenkins war file
-JENKINS_WAR=/usr/share/jenkins/jenkins.war
+JENKINS_WAR={{ pillar.jenkins.master.warfile }}
 
 # jenkins home location
 JENKINS_HOME=/var/lib/jenkins
@@ -43,7 +43,7 @@ HTTP_PORT={{ pillar.jenkins.master.http.port }}
 # port for AJP connector (disabled by default)
 AJP_PORT=-1
 
-# servlet context, important if you want to use apache proxying  
+# servlet context, important if you want to use apache proxying
 PREFIX=/jenkins
 
 # arguments to pass to jenkins.

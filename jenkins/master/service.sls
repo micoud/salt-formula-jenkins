@@ -4,6 +4,40 @@
 include:
 - java
 
+# RedHat specific
+{%- if grains.get('os_family', 'RedHat') %}
+# make sure python-pip is installed
+pip_installed:
+  pkg.installed:
+    - pkgs:
+      - python2-pip
+      - python-devel
+      - gcc
+
+# make sure python-bcrypt is installed via pip
+python-bcrypt_installed:
+  pip.installed:
+    - name: bcrypt
+    - require:
+      - pip_installed
+{%- endif %}
+
+jenkins_repository:
+  # todo include option for weekly build
+  pkgrepo.managed:
+    - humanname: Jenkins upstream package repository
+    {% if grains['os_family'] == 'RedHat' %}
+    - baseurl: {{ master.repo_url_stable }}
+    - gpgkey: {{ master.repo_key_stable }}
+    - name: jenkins
+    {% elif grains['os_family'] == 'Debian' %}
+    - file: {{ jenkins.deb_apt_source }}
+    - name: deb {{ master.repo_url_stable }} binary/
+    - key_url: {{ master.repo_key_stable }}
+    {% endif %}
+    - require_in:
+      - jenkins_packages
+
 jenkins_packages:
   pkg.installed:
   - names: {{ master.pkgs }}
@@ -11,19 +45,61 @@ jenkins_packages:
 jenkins_{{ master.config }}:
   file.managed:
   - name: {{ master.config }}
-  - source: salt://jenkins/files/jenkins
+  {% if grains['os_family'] == 'RedHat' %}
+  - source: salt://jenkins/files/RedHat/jenkins.conf
+  {% elif grains['os_family'] == 'Debian' %}
+  - source: salt://jenkins/files/Debian/jenkins.conf
+  {% endif %}
   - user: root
   - group: root
   - template: jinja
   - require:
     - pkg: jenkins_packages
 
+jenkins_init.groovy.d_directory_present:
+  file.directory:
+    - name: {{ master.home }}/init.groovy.d/
+    - user: {{ master.jenkins_user }}
+    - group: {{ master.jenkins_group }}
+    - dir_mode: 755
+    - file_mode: 644
+    - recurse:
+      - user
+      - group
+      - mode
+
+# csrf_protection_script_present:
+#   file.managed:
+#     - name: {{ master.home }}/init.groovy.d/configure-csrf-protection.groovy
+#     - source: salt://jenkins/files/groovy/configure-csrf-protection.groovy
+#     - required:
+#       - jenkins_init.groovy.d_directory_present
+#
+# configure_jnlp_agent_script_present:
+#   file.managed:
+#     - name: {{ master.home }}/init.groovy.d/configure-jnlp-agent-protocols.groovy
+#     - source: salt://jenkins/files/groovy/configure-jnlp-agent-protocols.groovy
+#     - required:
+#       - jenkins_init.groovy.d_directory_present
+
+{%- for script in master.groovy_config_scripts %}
+ensure_{{ script.name }}_present:
+  file.managed:
+    - name: {{ master.home }}/init.groovy.d/{{ script.name }}
+    - source: salt://jenkins/files/groovy/{{ script.name }}
+    - user: {{ master.jenkins_user }}
+    - group: {{ master.jenkins_group }}
+    - required:
+      - jenkins_init.groovy.d_directory_present
+{%- endfor %}
+
 {%- if master.get('no_config', False) == False %}
 {{ master.home }}/config.xml:
   file.managed:
   - source: salt://jenkins/files/config.xml
   - template: jinja
-  - user: jenkins
+  - user: {{ master.jenkins_user }}
+  - group: {{ master.jenkins_group }}
   - watch_in:
     - service: jenkins_master_service
 {%- endif %}
@@ -34,7 +110,8 @@ jenkins_{{ master.config }}:
   file.managed:
   - source: salt://jenkins/files/hudson.model.UpdateCenter.xml
   - template: jinja
-  - user: jenkins
+  - user: {{ master.jenkins_user }}
+  - group: {{ master.jenkins_group }}
   - require:
     - pkg: jenkins_packages
 
@@ -46,7 +123,8 @@ jenkins_{{ master.config }}:
   file.managed:
   - source: salt://jenkins/files/scriptApproval.xml
   - template: jinja
-  - user: jenkins
+  - user: {{ master.jenkins_user }}
+  - group: {{ master.jenkins_group }}
   - require:
     - pkg: jenkins_packages
 
@@ -58,7 +136,8 @@ jenkins_{{ master.config }}:
   file.managed:
   - source: salt://jenkins/files/hudson.tasks.Mailer.xml
   - template: jinja
-  - user: jenkins
+  - user: {{ master.jenkins_user }}
+  - group: {{ master.jenkins_group }}
   - require:
     - pkg: jenkins_packages
 

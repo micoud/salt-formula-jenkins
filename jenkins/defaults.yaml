@@ -1,0 +1,28 @@
+jenkins:
+  master:
+    # use stable repositories instead of weekly
+    stable: true
+
+    service: jenkins
+    jenkins_user: jenkins
+    jenkins_group: jenkins
+    home: /var/lib/jenkins
+    java_args: -Djava.awt.headless=true -Djava.net.preferIPv4Stack=true -Djenkins.install.runSetupWizard=false
+    java_executable: /usr/bin/java
+    jenkins_args: ''
+    http:
+      network: any
+      port: 8080
+      protocol: http
+    enable_access_log: no
+
+    # Debian only
+    access_log: >
+      --accessLoggerClassName=winstone.accesslog.SimpleAccessLogger
+      --simpleAccessLogger.format=combined
+      --simpleAccessLogger.file=/var/log/$NAME/access.log
+    max_open_files: 8192
+    umask: 027
+
+    # Redhat only
+    listen_address: 0.0.0.0
