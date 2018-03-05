@@ -1,26 +1,6 @@
 {% import_yaml "jenkins/defaults.yaml" as default_settings %}
-{% import_yaml "jenkins/osmap.yaml" as osmap %}
+{#% import_yaml "jenkins/osmap.yaml" as osmap %#}
 
-{#% set master = salt['grains.filter_by']({
-    'Debian': {
-        'pkgs': ['jenkins','python-bcrypt'],
-        'service': 'jenkins',
-        'config': '/etc/default/jenkins',
-        'home': '/var/lib/jenkins',
-        'update_site_url': 'http://updates.jenkins-ci.org/update-center.json',
-        'repo_url_stable': 'https://pkg.jenkins.io/debian-stable',
-        'repo_key_stable': 'https://pkg.jenkins.io/debian-stable/jenkins.io.key'
-    },
-    'RedHat': {
-        'pkgs': ['jenkins'],
-        'service': 'jenkins',
-        'config': '/etc/sysconfig/jenkins',
-        'home': '/var/lib/jenkins',
-        'update_site_url': 'http://updates.jenkins-ci.org/update-center.json',
-        'repo_url_stable': 'https://pkg.jenkins.io/redhat-stable',
-        'repo_key_stable': 'https://pkg.jenkins.io/redhat-stable/jenkins.io.key'
-    },
-}, merge=pillar.jenkins.get('master', {})) %#}
 # standard OS family customization
 {% set os_family_map = salt['grains.filter_by']({
     'Debian': {
@@ -28,7 +8,7 @@
         'service': 'jenkins',
         'config': '/etc/default/jenkins',
         'home': '/var/lib/jenkins',
-        'update_site_url': 'http://updates.jenkins-ci.org/update-center.json',
+        'update_site_url': 'https://updates.jenkins-ci.org/update-center.json',
         'repo_url_stable': 'https://pkg.jenkins.io/debian-stable',
         'repo_key_stable': 'https://pkg.jenkins.io/debian-stable/jenkins.io.key'
     },
@@ -37,7 +17,7 @@
         'service': 'jenkins',
         'config': '/etc/sysconfig/jenkins',
         'home': '/var/lib/jenkins',
-        'update_site_url': 'http://updates.jenkins-ci.org/update-center.json',
+        'update_site_url': 'https://updates.jenkins-ci.org/update-center.json',
         'repo_url_stable': 'https://pkg.jenkins.io/redhat-stable',
         'repo_key_stable': 'https://pkg.jenkins.io/redhat-stable/jenkins.io.key'
     },

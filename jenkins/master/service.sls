@@ -68,21 +68,7 @@ jenkins_init.groovy.d_directory_present:
       - group
       - mode
 
-# csrf_protection_script_present:
-#   file.managed:
-#     - name: {{ master.home }}/init.groovy.d/configure-csrf-protection.groovy
-#     - source: salt://jenkins/files/groovy/configure-csrf-protection.groovy
-#     - required:
-#       - jenkins_init.groovy.d_directory_present
-#
-# configure_jnlp_agent_script_present:
-#   file.managed:
-#     - name: {{ master.home }}/init.groovy.d/configure-jnlp-agent-protocols.groovy
-#     - source: salt://jenkins/files/groovy/configure-jnlp-agent-protocols.groovy
-#     - required:
-#       - jenkins_init.groovy.d_directory_present
-
-{%- for script in master.groovy_config_scripts %}
+{%- for script in master.groovy_config_scripts_present %}
 ensure_{{ script.name }}_present:
   file.managed:
     - name: {{ master.home }}/init.groovy.d/{{ script.name }}
@@ -91,6 +77,12 @@ ensure_{{ script.name }}_present:
     - group: {{ master.jenkins_group }}
     - required:
       - jenkins_init.groovy.d_directory_present
+{%- endfor %}
+
+{%- for script in master.groovy_config_scripts_absent %}
+ensure_{{ script.name }}_absent:
+  file.absent:
+    - name: {{ master.home }}/init.groovy.d/{{ script.name }}
 {%- endfor %}
 
 {%- if master.get('no_config', False) == False %}
